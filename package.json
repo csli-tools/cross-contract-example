@@ -1,0 +1,32 @@
+{
+  "name": "cw-contracts-cross-contract-helpers",
+  "version": "0.1.0",
+  "type": "module",
+  "module": "es2022",
+  "description": "Helper files demonstrating cross-contract calls in CosmWasm using cosmjs-cli",
+  "main": "index.js",
+  "scripts": {
+    "cslir": "./node_modules/.bin/cslir --init helpers/cosmwasm-init.ts"
+  },
+  "keywords": [
+    "cosmwasm",
+    "cosmjs",
+    "cosmjs-cli",
+    "cross-contract",
+    "calls",
+    "cosmos"
+  ],
+  "author": "Mike Purvis",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@cosmjs/amino": "^0.28.11",
+    "@cosmjs/cosmwasm-stargate": "^0.28.11",
+    "@cosmjs/encoding": "^0.28.11",
+    "@cosmjs/proto-signing": "^0.28.11",
+    "@cosmjs/stargate": "^0.28.11",
+    "@cosmjs/tendermint-rpc": "^0.28.11",
+    "@csli/repl": "^0.1.4",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.0.0"
+  }
+}
