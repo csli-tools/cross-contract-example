@@ -9,11 +9,11 @@ pub enum ContractError {
     #[error("ERR_NO_SCHOLARSHIP|Sender not in scholarship list and must pay")]
     Unauthorized {},
 
-    #[error("ERR_UNKNOWN_REPLY|Unknown reply ID")]
-    UnknownReplyID {},
+    #[error("ERR_UNKNOWN_REPLY|Unknown reply ID: {id:?}")]
+    UnknownReplyID { id: u64 },
 
-    #[error("ERR_REPLY_ERROR|Unknown reply ID")]
-    ReplyError { code: String, msg: String },
+    #[error("ERR_REPLY_ERROR|{code:?}|{msg:?}")]
+    ReplyError { code: u64, msg: String },
 
     #[error("{code:?}|{msg:?}")]
     CustomError { code: String, msg: String },

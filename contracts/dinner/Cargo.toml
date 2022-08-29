@@ -9,10 +9,12 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [features]
+default = []
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all instantiate/execute/query exports
 library = []
+staking = ["cw-multi-test/staking"]
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
@@ -34,4 +36,4 @@ thiserror = { version = "1.0.31" }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"
-cw-multi-test = "0.13.2"
+cw-multi-test = { version = "0.13", features = ["staking"] }

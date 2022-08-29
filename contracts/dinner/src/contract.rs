@@ -8,28 +8,44 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{DINNER_REGISTRANTS, SCHOLARSHIPS_ADDRESS};
+use crate::state::{Config, CONFIG, DINNER_REGISTRANTS, SCHOLARSHIPS_ADDRESS};
 
 // Version info for migration (boilerplate stuff)
 const CONTRACT_NAME: &str = "crates.io:cw-cross-contract-calls-dinner";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-
-const DENOM: &str = "ujunox";
 
 /// The scholarship list is set during instantiation
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let scholarship_list: Vec<Addr> = map_validate(deps.api, &msg.scholarship_list)?;
-    println!("aloha scholarship_list {:?}", scholarship_list);
+    let owner = msg
+        .owner
+        .and_then(|addr_string| deps.api.addr_validate(addr_string.as_str()).ok())
+        .unwrap_or(info.sender);
 
-    Ok(Response::new().add_attribute("method", "instantiate"))
+    let config = Config {
+        owner,
+        denom: msg.denom.clone(),
+    };
+    let scholarship_list: Vec<Addr> = vec![];
+    let scholarship_address = deps
+        .api
+        .addr_validate(msg.scholarship_address.as_str())
+        .expect("Wrong scholarship address");
+
+    CONFIG.save(deps.storage, &config)?;
+    DINNER_REGISTRANTS.save(deps.storage, &scholarship_list)?;
+    SCHOLARSHIPS_ADDRESS.save(deps.storage, &scholarship_address)?;
+
+    Ok(Response::new()
+        .add_attribute("contract", "dinner")
+        .add_attribute("method", "instantiate"))
 }
 
 // Taken from:
@@ -56,7 +72,8 @@ pub fn register_with_payment(
     info: MessageInfo,
     address: Addr,
 ) -> Result<Response, ContractError> {
-    if !has_coins(info.funds.as_slice(), &coin(10000, DENOM)) {
+    let config = CONFIG.load(deps.storage)?;
+    if !has_coins(info.funds.as_slice(), &coin(10000, config.denom)) {
         return Err(ContractError::MustAttachFunds {});
     }
     let mut registrants = DINNER_REGISTRANTS.load(deps.storage)?;
@@ -66,8 +83,8 @@ pub fn register_with_payment(
     registrants.push(address);
     DINNER_REGISTRANTS.save(deps.storage, &registrants)?;
     Ok(Response::new()
-        .add_attribute("method", "register_with_payment")
-        .add_attribute("registered", "true"))
+        .add_attribute("contract", "dinner")
+        .add_attribute("method", "register_with_payment"))
 }
 
 pub fn register_with_scholarship(deps: DepsMut, address: Addr) -> Result<Response, ContractError> {
@@ -89,8 +106,8 @@ pub fn register_with_scholarship(deps: DepsMut, address: Addr) -> Result<Respons
     registrants.push(address);
     DINNER_REGISTRANTS.save(deps.storage, &registrants)?;
     Ok(Response::new()
-        .add_attribute("method", "register_with_scholarship")
-        .add_attribute("registered", "true"))
+        .add_attribute("contract", "dinner")
+        .add_attribute("method", "register_with_scholarship"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

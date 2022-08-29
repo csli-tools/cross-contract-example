@@ -7,6 +7,7 @@ use cw_storage_plus::Item;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub owner: Addr,
+    pub denom: String,
 }
 
 // We might as well have one-letter keys like "c" or "n" to save ones and zeroes. Might as well.

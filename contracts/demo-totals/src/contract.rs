@@ -4,7 +4,6 @@ use cosmwasm_std::{
     to_binary, CosmosMsg, DepsMut, Env, MessageInfo, Reply, Response, SubMsg, Uint64, WasmMsg,
 };
 use cw2::set_contract_version;
-use cw_utils::parse_reply_execute_data;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
@@ -34,12 +33,18 @@ pub fn instantiate(
 
     let config = Config {
         owner: owner.clone(),
+        denom: msg.denom.clone(),
     };
+    let amount = Uint64::zero();
+
     CONFIG.save(deps.storage, &config)?;
+    NUM_RESERVATIONS.save(deps.storage, &amount)?;
 
     Ok(Response::new()
+        .add_attribute("contract", "demo-totals")
         .add_attribute("method", "instantiate")
-        .add_attribute("owner", owner))
+        .add_attribute("owner", owner)
+        .add_attribute("denom", msg.denom))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -59,6 +64,15 @@ pub fn execute(
     }
 }
 
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    match msg.id {
+        REPLY_REGISTER_WITH_PAYMENT => reply_register_with_payment(deps, msg),
+        REPLY_REGISTER_WITH_SCHOLARSHIP => reply_register_with_scholarship(deps, msg),
+        id => Err(ContractError::UnknownReplyID { id }),
+    }
+}
+
 pub fn execute_register_with_payment(
     info: MessageInfo,
     dinner_contract: String,
@@ -75,6 +89,7 @@ pub fn execute_register_with_payment(
     });
     let sub_msg: SubMsg = SubMsg::reply_always(action, REPLY_REGISTER_WITH_PAYMENT);
     Ok(Response::new()
+        .add_attribute("contract", "demo-totals")
         .add_attribute("method", "execute_register_with_payment")
         .add_submessage(sub_msg))
 }
@@ -93,41 +108,41 @@ pub fn execute_register_with_scholarship(
         .unwrap(),
         funds: vec![],
     });
-    let sub_msg: SubMsg = SubMsg::reply_always(action, REPLY_REGISTER_WITH_PAYMENT);
+    let sub_msg: SubMsg = SubMsg::reply_always(action, REPLY_REGISTER_WITH_SCHOLARSHIP);
     Ok(Response::new()
+        .add_attribute("contract", "demo-totals")
         .add_attribute("method", "execute_register_with_scholarship")
         .add_submessage(sub_msg))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    match msg.id {
-        REPLY_REGISTER_WITH_PAYMENT => {
-            let res = parse_reply_execute_data(msg);
-            if res.is_err() {
-                return Err(ContractError::ReplyError {
-                    code: REPLY_REGISTER_WITH_PAYMENT.to_string(),
-                    msg: res.err().unwrap().to_string(),
-                });
-            }
-            NUM_RESERVATIONS.update(deps.storage, |num: Uint64| -> Result<_, ContractError> {
-                Ok(num.saturating_add(1u64.into()))
-            })?;
-            Ok(Response::new().add_attribute("reply", "register_with_payment"))
-        }
-        REPLY_REGISTER_WITH_SCHOLARSHIP => {
-            let res = parse_reply_execute_data(msg);
-            if res.is_err() {
-                return Err(ContractError::ReplyError {
-                    code: REPLY_REGISTER_WITH_SCHOLARSHIP.to_string(),
-                    msg: res.err().unwrap().to_string(),
-                });
-            }
-            NUM_RESERVATIONS.update(deps.storage, |num: Uint64| -> Result<_, ContractError> {
-                Ok(num.saturating_add(1u64.into()))
-            })?;
-            Ok(Response::new().add_attribute("reply", "register_with_scholarship"))
-        }
-        _ => Err(ContractError::UnknownReplyID {}),
-    }
+fn reply_register_with_payment(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+    if let Err(err) = msg.result.into_result() {
+        return Err(ContractError::ReplyError {
+            code: REPLY_REGISTER_WITH_PAYMENT,
+            msg: err,
+        });
+    };
+    NUM_RESERVATIONS.update(deps.storage, |num: Uint64| -> Result<_, ContractError> {
+        Ok(num.saturating_add(1u64.into()))
+    })?;
+    Ok(Response::new()
+        .add_attribute("contract", "demo-totals")
+        .add_attribute("method", "reply")
+        .add_attribute("reply_id", REPLY_REGISTER_WITH_PAYMENT.to_string()))
+}
+
+fn reply_register_with_scholarship(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+    if let Err(err) = msg.result.into_result() {
+        return Err(ContractError::ReplyError {
+            code: REPLY_REGISTER_WITH_SCHOLARSHIP,
+            msg: err,
+        });
+    };
+    NUM_RESERVATIONS.update(deps.storage, |num: Uint64| -> Result<_, ContractError> {
+        Ok(num.saturating_add(1u64.into()))
+    })?;
+    Ok(Response::new()
+        .add_attribute("contract", "demo-totals")
+        .add_attribute("method", "reply")
+        .add_attribute("reply_id", REPLY_REGISTER_WITH_SCHOLARSHIP.to_string()))
 }
