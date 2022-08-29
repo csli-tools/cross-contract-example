@@ -9,6 +9,12 @@ pub enum ContractError {
     #[error("ERR_NO_SCHOLARSHIP|Sender not in scholarship list and must pay")]
     Unauthorized {},
 
+    #[error("Address is already registered for the dinner")]
+    AlreadyRegistered {},
+
+    #[error("Must attach at least 0.01 ujunox")]
+    MustAttachFunds {},
+
     #[error("{code:?}|{msg:?}")]
     CustomError { code: String, msg: String },
     // Add any other custom errors you like here.

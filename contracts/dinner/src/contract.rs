@@ -1,19 +1,20 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Api, Binary, Deps, DepsMut, Env, MessageInfo, Order, Reply, Response,
-    StdResult, Uint64,
+    coin, has_coins, to_binary, Addr, Api, Binary, Deps, DepsMut, Env, MessageInfo, Response,
+    StdResult,
 };
 use cw2::set_contract_version;
-use cw_utils::parse_reply_execute_data;
 
 use crate::error::ContractError;
-use crate::msg::{InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{DINNER_REGISTRANTS, SCHOLARSHIPS_ADDRESS};
 
 // Version info for migration (boilerplate stuff)
 const CONTRACT_NAME: &str = "crates.io:cw-cross-contract-calls-dinner";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+const DENOM: &str = "ujunox";
 
 /// The scholarship list is set during instantiation
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -38,6 +39,61 @@ pub fn map_validate(api: &dyn Api, admins: &[String]) -> StdResult<Vec<Addr>> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
+pub fn execute(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response, ContractError> {
+    match msg {
+        ExecuteMsg::RegisterWithScholarship { address } => register_with_scholarship(deps, address),
+        ExecuteMsg::RegisterWithPayment { address } => register_with_payment(deps, info, address),
+    }
+}
+
+pub fn register_with_payment(
+    deps: DepsMut,
+    info: MessageInfo,
+    address: Addr,
+) -> Result<Response, ContractError> {
+    if !has_coins(info.funds.as_slice(), &coin(10000, DENOM)) {
+        return Err(ContractError::MustAttachFunds {});
+    }
+    let mut registrants = DINNER_REGISTRANTS.load(deps.storage)?;
+    if registrants.iter().any(|registered| registered == &address) {
+        return Err(ContractError::AlreadyRegistered {});
+    };
+    registrants.push(address);
+    DINNER_REGISTRANTS.save(deps.storage, &registrants)?;
+    Ok(Response::new()
+        .add_attribute("method", "register_with_payment")
+        .add_attribute("registered", "true"))
+}
+
+pub fn register_with_scholarship(deps: DepsMut, address: Addr) -> Result<Response, ContractError> {
+    let mut registrants = DINNER_REGISTRANTS.load(deps.storage)?;
+    if registrants.iter().any(|registered| registered == &address) {
+        return Err(ContractError::AlreadyRegistered {});
+    };
+    let whitelist: cw1_whitelist::msg::AdminListResponse = deps.querier.query_wasm_smart(
+        SCHOLARSHIPS_ADDRESS.load(deps.storage)?,
+        &cw1_whitelist::msg::QueryMsg::AdminList::<String> {},
+    )?;
+    if !whitelist
+        .admins
+        .iter()
+        .any(|addr| addr == &address.clone().into_string())
+    {
+        return Err(ContractError::Unauthorized {});
+    }
+    registrants.push(address);
+    DINNER_REGISTRANTS.save(deps.storage, &registrants)?;
+    Ok(Response::new()
+        .add_attribute("method", "register_with_scholarship")
+        .add_attribute("registered", "true"))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetAllRegistrants {} => to_binary(&query_address_in_list(deps)?),
@@ -49,7 +105,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 pub fn query_address_in_list(deps: Deps) -> StdResult<Vec<Addr>> {
     let cfg = DINNER_REGISTRANTS.load(deps.storage)?;
-    let all_registrants = cfg.into_iter().map(|a| a.into()).collect();
+    let all_registrants = cfg.into_iter().collect();
     Ok(all_registrants)
 }
 
