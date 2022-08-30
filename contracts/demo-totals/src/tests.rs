@@ -211,6 +211,17 @@ fn test_with_payment_failure() -> StdResult<()> {
         &coins(9999, NATIVE_DENOM),
     );
     assert!(res.is_err());
+    // Error if provided a wrong dinner address
+    let msg_wrong_address = ExecuteMsg::RegisterWithPayment {
+        dinner_contract: contract.to_string(),
+    };
+    let res = app.execute_contract(
+        Addr::unchecked(ALICE),
+        contract.clone(),
+        &msg_wrong_address,
+        &coins(10000, NATIVE_DENOM),
+    );
+    assert!(res.is_err());
     // Number of registrants didn't change
     assert_eq!(query_number_of_registrants(&app, contract.clone()), 0);
     // Check that state of dinner contract didn't change
@@ -219,6 +230,22 @@ fn test_with_payment_failure() -> StdResult<()> {
         query_is_registered(&app, dinner.clone(), ALICE.to_string()),
         false
     );
+
+    // Register ALICE and check that she can't register again
+    app.execute_contract(
+        Addr::unchecked(ALICE),
+        contract.clone(),
+        &msg_register_with_payment,
+        &coins(10000, NATIVE_DENOM),
+    )
+    .unwrap();
+    let res = app.execute_contract(
+        Addr::unchecked(ALICE),
+        contract.clone(),
+        &msg_register_with_payment,
+        &coins(9999, NATIVE_DENOM),
+    );
+    assert!(res.is_err());
 
     Ok(())
 }
@@ -272,6 +299,22 @@ fn test_with_scholarship_failure() -> StdResult<()> {
         query_is_registered(&app, dinner.clone(), BOB.to_string()),
         false
     );
+
+    // Register ALICE and check that she can't register twice
+    app.execute_contract(
+        Addr::unchecked(ALICE),
+        contract.clone(),
+        &msg_register_with_payment,
+        &vec![],
+    )
+    .unwrap();
+    let res = app.execute_contract(
+        Addr::unchecked(ALICE),
+        contract.clone(),
+        &msg_register_with_payment,
+        &vec![],
+    );
+    assert!(res.is_err());
 
     Ok(())
 }
