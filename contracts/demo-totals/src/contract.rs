@@ -1,12 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, CosmosMsg, DepsMut, Env, MessageInfo, Reply, Response, SubMsg, Uint64, WasmMsg,
+    to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult,
+    SubMsg, Uint64, WasmMsg,
 };
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, NUM_RESERVATIONS};
 
 // Version info for migration (boilerplate stuff)
@@ -35,10 +36,9 @@ pub fn instantiate(
         owner: owner.clone(),
         denom: msg.denom.clone(),
     };
-    let amount = Uint64::zero();
 
     CONFIG.save(deps.storage, &config)?;
-    NUM_RESERVATIONS.save(deps.storage, &amount)?;
+    NUM_RESERVATIONS.save(deps.storage, &0)?;
 
     Ok(Response::new()
         .add_attribute("contract", "demo-totals")
@@ -60,6 +60,16 @@ pub fn execute(
         }
         ExecuteMsg::RegisterWithScholarship { dinner_contract } => {
             execute_register_with_scholarship(info, dinner_contract)
+        }
+    }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::RegistrantNumber {} => {
+            let amount = NUM_RESERVATIONS.load(deps.storage)?;
+            to_binary(&Uint64::new(amount))
         }
     }
 }
@@ -122,8 +132,8 @@ fn reply_register_with_payment(deps: DepsMut, msg: Reply) -> Result<Response, Co
             msg: err,
         });
     };
-    NUM_RESERVATIONS.update(deps.storage, |num: Uint64| -> Result<_, ContractError> {
-        Ok(num.saturating_add(1u64.into()))
+    NUM_RESERVATIONS.update(deps.storage, |num: u64| -> Result<_, ContractError> {
+        Ok(num.saturating_add(1u64))
     })?;
     Ok(Response::new()
         .add_attribute("contract", "demo-totals")
@@ -138,8 +148,8 @@ fn reply_register_with_scholarship(deps: DepsMut, msg: Reply) -> Result<Response
             msg: err,
         });
     };
-    NUM_RESERVATIONS.update(deps.storage, |num: Uint64| -> Result<_, ContractError> {
-        Ok(num.saturating_add(1u64.into()))
+    NUM_RESERVATIONS.update(deps.storage, |num: u64| -> Result<_, ContractError> {
+        Ok(num.saturating_add(1u64))
     })?;
     Ok(Response::new()
         .add_attribute("contract", "demo-totals")

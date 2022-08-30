@@ -22,5 +22,5 @@ pub enum QueryMsg {
     /// Shows all addresses with dinner scholarships
     GetAllRegistrants {},
     /// Check if address is registered
-    IsAddressRegistered { address: Addr },
+    IsAddressRegistered { address: String },
 }

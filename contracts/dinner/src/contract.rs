@@ -48,12 +48,6 @@ pub fn instantiate(
         .add_attribute("method", "instantiate"))
 }
 
-// Taken from:
-// https://github.com/CosmWasm/cw-plus/blame/fc089febdab836400982eb096a545997a2bf4aed/contracts/cw1-whitelist/src/contract.rs#L38-L40
-pub fn map_validate(api: &dyn Api, admins: &[String]) -> StdResult<Vec<Addr>> {
-    admins.iter().map(|addr| api.addr_validate(addr)).collect()
-}
-
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
@@ -65,6 +59,22 @@ pub fn execute(
         ExecuteMsg::RegisterWithScholarship { address } => register_with_scholarship(deps, address),
         ExecuteMsg::RegisterWithPayment { address } => register_with_payment(deps, info, address),
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetAllRegistrants {} => to_binary(&query_address_in_list(deps)?),
+        QueryMsg::IsAddressRegistered { address } => {
+            to_binary(&query_is_address_registered(deps, address)?)
+        }
+    }
+}
+
+// Taken from:
+// https://github.com/CosmWasm/cw-plus/blame/fc089febdab836400982eb096a545997a2bf4aed/contracts/cw1-whitelist/src/contract.rs#L38-L40
+pub fn map_validate(api: &dyn Api, admins: &[String]) -> StdResult<Vec<Addr>> {
+    admins.iter().map(|addr| api.addr_validate(addr)).collect()
 }
 
 pub fn register_with_payment(
@@ -110,24 +120,15 @@ pub fn register_with_scholarship(deps: DepsMut, address: Addr) -> Result<Respons
         .add_attribute("method", "register_with_scholarship"))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg {
-        QueryMsg::GetAllRegistrants {} => to_binary(&query_address_in_list(deps)?),
-        QueryMsg::IsAddressRegistered { address } => {
-            to_binary(&query_is_address_registered(deps, address)?)
-        }
-    }
-}
-
 pub fn query_address_in_list(deps: Deps) -> StdResult<Vec<Addr>> {
     let cfg = DINNER_REGISTRANTS.load(deps.storage)?;
     let all_registrants = cfg.into_iter().collect();
     Ok(all_registrants)
 }
 
-pub fn query_is_address_registered(deps: Deps, address: Addr) -> StdResult<bool> {
+pub fn query_is_address_registered(deps: Deps, address: String) -> StdResult<bool> {
+    let address_valid = deps.api.addr_validate(address.as_str())?;
     let registrants = DINNER_REGISTRANTS.load(deps.storage)?;
-    let is_registered = registrants.iter().any(|a| a.as_ref() == address);
+    let is_registered = registrants.iter().any(|a| a.as_ref() == address_valid);
     Ok(is_registered)
 }

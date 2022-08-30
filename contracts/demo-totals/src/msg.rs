@@ -16,3 +16,9 @@ pub enum ExecuteMsg {
     // They will be on the list stored in the whitelist contract.
     RegisterWithScholarship { dinner_contract: String },
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum QueryMsg {
+    RegistrantNumber {},
+}
