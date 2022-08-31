@@ -97,7 +97,8 @@ pub fn execute_register_with_payment(
         .unwrap(),
         funds: info.funds,
     });
-    let sub_msg: SubMsg = SubMsg::reply_always(action, REPLY_REGISTER_WITH_PAYMENT);
+    // use reply_on_success because we need to increase number of registrants in case of success
+    let sub_msg: SubMsg = SubMsg::reply_on_success(action, REPLY_REGISTER_WITH_PAYMENT);
     Ok(Response::new()
         .add_attribute("contract", "demo-totals")
         .add_attribute("method", "execute_register_with_payment")
@@ -118,7 +119,8 @@ pub fn execute_register_with_scholarship(
         .unwrap(),
         funds: vec![],
     });
-    let sub_msg: SubMsg = SubMsg::reply_always(action, REPLY_REGISTER_WITH_SCHOLARSHIP);
+    // use reply_on_success because we need to increase number of registrants in case of success
+    let sub_msg: SubMsg = SubMsg::reply_on_success(action, REPLY_REGISTER_WITH_SCHOLARSHIP);
     Ok(Response::new()
         .add_attribute("contract", "demo-totals")
         .add_attribute("method", "execute_register_with_scholarship")
