@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryMsg",
+  "oneOf": [
+    {
+      "description": "Shows all addresses with dinner scholarships",
+      "type": "object",
+      "required": [
+        "get_all_registrants"
+      ],
+      "properties": {
+        "get_all_registrants": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Check if address is registered",
+      "type": "object",
+      "required": [
+        "is_address_registered"
+      ],
+      "properties": {
+        "is_address_registered": {
+          "type": "object",
+          "required": [
+            "address"
+          ],
+          "properties": {
+            "address": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}
