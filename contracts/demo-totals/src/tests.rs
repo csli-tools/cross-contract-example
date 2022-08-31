@@ -160,6 +160,7 @@ fn test_with_payment_success() -> StdResult<()> {
         &msg_register_with_payment,
         &coins(10000, NATIVE_DENOM),
     );
+    println!("{:#?}", res);
     assert!(res.is_ok());
     assert_eq!(query_number_of_registrants(&app, contract.clone()), 1);
     assert_eq!(query_all_registrants(&app, dinner.clone()).len(), 1);
@@ -179,6 +180,7 @@ fn test_with_payment_success() -> StdResult<()> {
         &msg_register_with_payment,
         &coins(15000, NATIVE_DENOM),
     );
+    println!("{:#?}", res);
     assert!(res.is_ok());
     // There are two registrants
     assert_eq!(query_number_of_registrants(&app, contract.clone()), 2);
@@ -210,6 +212,7 @@ fn test_with_payment_failure() -> StdResult<()> {
         &msg_register_with_payment,
         &coins(9999, NATIVE_DENOM),
     );
+    println!("{:#?}", res);
     assert!(res.is_err());
     // Error if provided a wrong dinner address
     let msg_wrong_address = ExecuteMsg::RegisterWithPayment {
@@ -221,6 +224,7 @@ fn test_with_payment_failure() -> StdResult<()> {
         &msg_wrong_address,
         &coins(10000, NATIVE_DENOM),
     );
+    println!("{:#?}", res);
     assert!(res.is_err());
     // Number of registrants didn't change
     assert_eq!(query_number_of_registrants(&app, contract.clone()), 0);
@@ -243,8 +247,9 @@ fn test_with_payment_failure() -> StdResult<()> {
         Addr::unchecked(ALICE),
         contract.clone(),
         &msg_register_with_payment,
-        &coins(9999, NATIVE_DENOM),
+        &coins(10000, NATIVE_DENOM),
     );
+    println!("{:#?}", res);
     assert!(res.is_err());
 
     Ok(())
@@ -264,6 +269,7 @@ fn test_with_scholarship_success() -> StdResult<()> {
         &msg_register_with_payment,
         &vec![],
     );
+    println!("{:#?}", res);
     assert!(res.is_ok());
     assert_eq!(query_number_of_registrants(&app, contract.clone()), 1);
     // Check that ALICE is registered
@@ -290,6 +296,7 @@ fn test_with_scholarship_failure() -> StdResult<()> {
         &msg_register_with_payment,
         &vec![],
     );
+    println!("{:#?}", res);
     assert!(res.is_err());
     // Number of registrants didn't change
     assert_eq!(query_number_of_registrants(&app, contract.clone()), 0);
@@ -314,6 +321,7 @@ fn test_with_scholarship_failure() -> StdResult<()> {
         &msg_register_with_payment,
         &vec![],
     );
+    println!("{:#?}", res);
     assert!(res.is_err());
 
     Ok(())
