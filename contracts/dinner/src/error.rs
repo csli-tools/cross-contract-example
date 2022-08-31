@@ -12,7 +12,7 @@ pub enum ContractError {
     #[error("Address is already registered for the dinner")]
     AlreadyRegistered {},
 
-    #[error("Must attach at least 0.01 ujunox")]
+    #[error("Must attach at least 0.01 ujunox (or another native denom)")]
     MustAttachFunds {},
 
     #[error("{code:?}|{msg:?}")]

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# In case of M1 MacBook use rust-optimizer-arm64 instead of rust-optimizer
+# In case of M1 MacBook use workspace-optimizer-arm64 instead of workspace-optimizer
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \

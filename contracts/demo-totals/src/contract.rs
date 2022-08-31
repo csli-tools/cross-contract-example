@@ -128,6 +128,7 @@ pub fn execute_register_with_scholarship(
 }
 
 fn reply_register_with_payment(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+    // shouldn't happen because we used reply_on_success
     if let Err(err) = msg.result.into_result() {
         return Err(ContractError::ReplyError {
             code: REPLY_REGISTER_WITH_PAYMENT,
@@ -144,6 +145,7 @@ fn reply_register_with_payment(deps: DepsMut, msg: Reply) -> Result<Response, Co
 }
 
 fn reply_register_with_scholarship(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+    // shouldn't happen because we used reply_on_success
     if let Err(err) = msg.result.into_result() {
         return Err(ContractError::ReplyError {
             code: REPLY_REGISTER_WITH_SCHOLARSHIP,
