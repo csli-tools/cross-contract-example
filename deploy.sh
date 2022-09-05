@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# In case of M1 MacBook use workspace-optimizer-arm64 instead of workspace-optimizer
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  --platform linux/amd64 \
   cosmwasm/workspace-optimizer:0.12.6
 
 NODE="--node https://rpc.uni.juno.deuslabs.fi:443"
@@ -31,7 +31,6 @@ JSON=$(jq -n --arg addr $(junod keys show -a $BOB) '{ denom:"ujunox","address":$
     curl -X POST --header "Content-Type: application/json" --data "$JSON" https://faucet.uni.juno.deuslabs.fi/credit && echo
 
 # Store code
-# In case of M1 MacBook replace demo_total.wasm with demo_total-aarch64.wasm
 RES_DEMO_TOTAL=$(junod tx wasm store artifacts/cross_contract_demo_totals.wasm --from $OWNER $TXFLAG -y --output json -b block)
 CODE_DEMO_TOTAL=$(echo $RES_DEMO_TOTAL | jq -r '.logs[0].events[-1].attributes[0].value')
 
