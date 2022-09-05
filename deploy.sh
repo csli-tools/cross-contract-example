@@ -43,7 +43,7 @@ CODE_WHITELIST=$(echo $RES_WHITELIST | jq -r '.logs[0].events[-1].attributes[0].
 
 # Instantiate
 INIT_WHITELIST='{"admins":["'$(junod keys show -a $ALICE)'"], "mutable": true}'
-junod tx wasm instantiate $CODE_WHITELIST "$INIT_WHITELIST" --from $OWNER --label "demo-total" $TXFLAG -y --no-admin
+junod tx wasm instantiate $CODE_WHITELIST "$INIT_WHITELIST" --from $OWNER --label "scholarship-list" $TXFLAG -y --no-admin
 CONTRACT_WHITELIST=$(junod query wasm list-contract-by-code $CODE_WHITELIST $NODE --output json | jq -r '.contracts[-1]')
 
 INIT_DEMO_TOTAL='{"denom":"ujunox"}'
@@ -51,7 +51,7 @@ junod tx wasm instantiate $CODE_DEMO_TOTAL "$INIT_DEMO_TOTAL" --from $OWNER --la
 CONTRACT_DEMO_TOTAL=$(junod query wasm list-contract-by-code $CODE_DEMO_TOTAL $NODE --output json | jq -r '.contracts[-1]')
 
 INIT_DINNER='{"denom":"ujunox", "scholarship_address":"'$CONTRACT_WHITELIST'"}'
-junod tx wasm instantiate $CODE_DINNER "$INIT_DINNER" --from $OWNER --label "demo-total" $TXFLAG -y --no-admin
+junod tx wasm instantiate $CODE_DINNER "$INIT_DINNER" --from $OWNER --label "dinner" $TXFLAG -y --no-admin
 CONTRACT_DINNER=$(junod query wasm list-contract-by-code $CODE_DINNER $NODE --output json | jq -r '.contracts[-1]')
 
 # ALICE and BOB call CONTRACT_DEMO_TOTAL
