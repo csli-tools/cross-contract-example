@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExecuteMsg",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "register_with_payment"
+      ],
+      "properties": {
+        "register_with_payment": {
+          "type": "object",
+          "required": [
+            "dinner_contract"
+          ],
+          "properties": {
+            "dinner_contract": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "register_with_scholarship"
+      ],
+      "properties": {
+        "register_with_scholarship": {
+          "type": "object",
+          "required": [
+            "dinner_contract"
+          ],
+          "properties": {
+            "dinner_contract": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}
